@@ -1,4 +1,5 @@
 use eframe::egui;
+use rusqlite::{ params, Connection };
 
 pub struct Command {
     factory: String,
@@ -7,14 +8,26 @@ pub struct Command {
 
 pub struct Commands {
     commands: Vec<Command>,
-    text: String,
+    excelpath: String,
 }
 
 impl Default for Commands {
     fn default() -> Self {
-        Self {
-            commands: Vec::new(),
-            text: "".into(),
+        let conn = Connection::open("blj.db").unwrap();
+        let mut stmt = conn.prepare("SELECT excelpath FROM store").unwrap();
+        let mut store = stmt.query([]).unwrap();
+
+        if let Some(row) = store.next().unwrap() {
+            let x: String = row.get(0).unwrap_or_default();
+            Self {
+                commands: Vec::new(),
+                excelpath: x,
+            }
+        } else {
+            Self {
+                commands: Vec::new(),
+                excelpath: "".into(),
+            }
         }
     }
 }
@@ -53,18 +66,18 @@ impl super::View for Commands {
 
 impl Commands {
     fn gallery_grid_contents(&mut self, ui: &mut egui::Ui) {
-        let Self { text, .. } = self;
+        let Self { excelpath, .. } = self;
         ui.label("cisco");
-        ui.add(egui::TextEdit::multiline(text).desired_rows(1).hint_text("commands"));
+        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
         ui.end_row();
         ui.label("maipu");
-        ui.add(egui::TextEdit::multiline(text).desired_rows(1).hint_text("commands"));
+        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
         ui.end_row();
         ui.label("h3c");
-        ui.add(egui::TextEdit::multiline(text).desired_rows(1).hint_text("commands"));
+        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
         ui.end_row();
         ui.label("huawei");
-        ui.add(egui::TextEdit::multiline(text).desired_rows(1).hint_text("commands"));
+        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
         ui.end_row();
     }
 }

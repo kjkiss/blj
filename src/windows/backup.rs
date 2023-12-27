@@ -42,7 +42,7 @@ impl Default for Backup {
 
         Self {
             kind: Kind::Intranet,
-            data: Switch::new(),
+            data: Switch::global().clone(),
             setting: Setting::new(),
             tx,
             rx,

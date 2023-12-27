@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 use eframe::egui::{ Context, Ui };
 use rusqlite::Connection;
 
-use crate::model::switch::Switch;
+use crate::model::switch::{INSTANCE, Switch};
 use crate::setting::Setting;
 use crate::windows::backup::Backup;
 use crate::windows::{ setting, Window, command };
@@ -65,10 +65,13 @@ impl Default for Blj {
             }
         }
 
+        let x = Switch::new();
+        INSTANCE.set(x).unwrap();
+
         Self {
             kind: Kind::Intranet,
             area: Area::Ytbz,
-            data: Switch::new(),
+            data: Switch::global().clone(),
             setting: Setting::new(),
             store: mystore,
             backup_is_open: false,
@@ -99,6 +102,11 @@ impl Blj {
             window.show(ctx, &mut is_open);
             set_open(open, window.name(), is_open);
         }
+    }
+
+    pub fn get_factory(&self) -> Vec<String> {
+        dbg!(self.data.0.len());
+        Vec::new()
     }
 }
 

@@ -1,4 +1,5 @@
 use calamine::{ Reader, Xlsx, open_workbook };
+use once_cell::sync::OnceCell;
 
 #[derive(Debug, Clone)]
 pub struct Switch {
@@ -11,7 +12,21 @@ pub struct Switch {
     pub floor: String,
 }
 
+pub static INSTANCE: OnceCell<(Vec<Switch>, Vec<Switch>)> = OnceCell::new();
+
 impl Switch {
+    pub fn global() -> &'static (Vec<Switch>, Vec<Switch>) {
+        INSTANCE.get().expect("Switch is not initialized")
+    }
+
+    pub fn get_factory() -> Vec<String> {
+        let x = Switch::global();
+        
+
+
+        vec!["".into()]
+    }
+
     pub fn new() -> (Vec<Switch>, Vec<Switch>) {
         let mut wb: Xlsx<_> = open_workbook("./switch.xlsx").expect("open xlsx err");
         let mut intranet = vec![];
