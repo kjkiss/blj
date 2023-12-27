@@ -1,21 +1,17 @@
 use eframe::egui::{ self };
 use rusqlite::{ params, Connection };
-use std::path::PathBuf;
 
 pub struct Setting {
     username: String,
     password: String,
     crtpath: String,
     excelpath: String,
-    // opened_file: Option<PathBuf>,
     open_crt_dialog: Option<String>,
     open_excel_dialog: Option<String>,
 }
 
 impl Default for Setting {
     fn default() -> Self {
-        let mut dir = PathBuf::new();
-        dir.push("c:\\");
         let conn = Connection::open("blj.db").unwrap();
         let mut stmt = conn
             .prepare("SELECT id, username, password, crtpath, excelpath FROM store")
@@ -27,7 +23,6 @@ impl Default for Setting {
                 password: row.get(2).unwrap_or_default(),
                 crtpath: row.get(3).unwrap_or_default(),
                 excelpath: row.get(4).unwrap_or_default(),
-                // opened_file: Some(dir.clone()),
                 open_crt_dialog: None,
                 open_excel_dialog: None,
             }
@@ -37,7 +32,6 @@ impl Default for Setting {
                 password: Default::default(),
                 crtpath: Default::default(),
                 excelpath: Default::default(),
-                // opened_file: Some(dir),
                 open_crt_dialog: None,
                 open_excel_dialog: None,
             }

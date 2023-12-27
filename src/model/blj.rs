@@ -5,7 +5,7 @@ use rusqlite::Connection;
 use crate::model::switch::Switch;
 use crate::setting::Setting;
 use crate::windows::backup::Backup;
-use crate::windows::{ setting, Window };
+use crate::windows::{ setting, Window, command };
 use crate::Store;
 
 pub struct Blj {
@@ -73,7 +73,10 @@ impl Default for Blj {
             store: mystore,
             backup_is_open: false,
             backup: Backup::default(),
-            windows: vec![Box::<setting::Setting>::default()],
+            windows: vec![
+                Box::<setting::Setting>::default(),
+                Box::<command::Commands>::default(),
+                ],
             open,
         }
     }
