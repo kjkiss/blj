@@ -1,6 +1,6 @@
 {
-  "username": "apples",
-  "password": "motdepasse.2",
+  "username": "user",
+  "password": "pass",
   "crtpath": "D:/SecureCRT/SecureCRT.exe",
   "excel": "switch.xlsx",
   "factory": {
