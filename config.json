@@ -1,0 +1,13 @@
+{
+  "username": "apples",
+  "password": "motdepasse.2",
+  "crtpath": "D:/SecureCRT/SecureCRT.exe",
+  "excel": "switch.xlsx",
+  "factory": {
+    "cisco": ["terminal len 0", "show run", "show ver", "exit"],
+    "ruijie": ["terminal len 0", "show run", "exit"],
+    "maipu": ["more off", "show run", "logout"],
+    "h3c": ["screen-length disable", "display current", "quit"],
+    "huawei": ["screen-length 0 temp", "dis cu", "quit"]
+  }
+}
