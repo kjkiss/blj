@@ -1,5 +1,5 @@
 use eframe::egui;
-use rusqlite::{ Connection, params };
+use rusqlite::Connection;
 use crate::model::switch::Switch;
 use std::{ iter::zip, collections::HashSet };
 
@@ -11,7 +11,6 @@ pub struct Commands {
 
 impl Default for Commands {
     fn default() -> Self {
-
         let mut factorys = Vec::new();
         let mut commands = Vec::new();
 
@@ -21,32 +20,32 @@ impl Default for Commands {
         let mut store = stmt.query([]).unwrap();
 
         while let Some(row) = store.next().unwrap() {
-            let m: String = row.get(0).unwrap_or_default();
-            let n: String = row.get(1).unwrap_or_default();
-            factorys.push(m);
-            commands.push(n);
+            let factory: String = row.get(0).unwrap_or_default();
+            let command: String = row.get(1).unwrap_or_default();
+            factorys.push(factory);
+            commands.push(command);
         }
 
         if factorys.len() > 0 {
-            return  Self {
+            return Self {
                 factory: factorys,
                 commands,
             };
         }
 
         let factorys = Switch::get_factory();
-        let mut a = factorys.0;
-        let b = factorys.1;
-        a.extend(b);
-        let c: HashSet<String> = HashSet::from_iter(a);
+        let mut intranet_factory = factorys.0;
+        let internet_factory = factorys.1;
+        intranet_factory.extend(internet_factory);
+        let factory_set: HashSet<String> = HashSet::from_iter(intranet_factory);
 
-        let kk: Vec<String> = Vec::from_iter(c);
+        let all_factory: Vec<String> = Vec::from_iter(factory_set);
 
-        let len = kk.len();
-        let y = (0..len).map(|_x| "".to_string()).collect::<Vec<String>>();
+        let len = all_factory.len();
+        let commands = (0..len).map(|_x| "".to_string()).collect::<Vec<String>>();
         Self {
-            factory: kk,
-            commands: y,
+            factory: all_factory,
+            commands,
         }
     }
 }
