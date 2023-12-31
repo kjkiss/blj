@@ -103,11 +103,6 @@ impl Blj {
             set_open(open, window.name(), is_open);
         }
     }
-
-    pub fn get_factory(&self) -> Vec<String> {
-        dbg!(self.data.0.len());
-        Vec::new()
-    }
 }
 
 fn set_open(open: &mut BTreeSet<String>, key: &'static str, is_open: bool) {

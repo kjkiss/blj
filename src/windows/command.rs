@@ -1,33 +1,52 @@
 use eframe::egui;
-use rusqlite::{ params, Connection };
+use rusqlite::{ Connection, params };
+use crate::model::switch::Switch;
+use std::{ iter::zip, collections::HashSet };
 
-pub struct Command {
-    factory: String,
-    commands: Vec<String>,
-}
-
+#[derive(Debug)]
 pub struct Commands {
-    commands: Vec<Command>,
-    excelpath: String,
+    factory: Vec<String>,
+    commands: Vec<String>,
 }
 
 impl Default for Commands {
     fn default() -> Self {
+
+        let mut factorys = Vec::new();
+        let mut commands = Vec::new();
+
         let conn = Connection::open("blj.db").unwrap();
-        let mut stmt = conn.prepare("SELECT excelpath FROM store").unwrap();
+        let mut stmt = conn.prepare("SELECT factory, command FROM commands").unwrap();
+
         let mut store = stmt.query([]).unwrap();
 
-        if let Some(row) = store.next().unwrap() {
-            let x: String = row.get(0).unwrap_or_default();
-            Self {
-                commands: Vec::new(),
-                excelpath: x,
-            }
-        } else {
-            Self {
-                commands: Vec::new(),
-                excelpath: "".into(),
-            }
+        while let Some(row) = store.next().unwrap() {
+            let m: String = row.get(0).unwrap_or_default();
+            let n: String = row.get(1).unwrap_or_default();
+            factorys.push(m);
+            commands.push(n);
+        }
+
+        if factorys.len() > 0 {
+            return  Self {
+                factory: factorys,
+                commands,
+            };
+        }
+
+        let factorys = Switch::get_factory();
+        let mut a = factorys.0;
+        let b = factorys.1;
+        a.extend(b);
+        let c: HashSet<String> = HashSet::from_iter(a);
+
+        let kk: Vec<String> = Vec::from_iter(c);
+
+        let len = kk.len();
+        let y = (0..len).map(|_x| "".to_string()).collect::<Vec<String>>();
+        Self {
+            factory: kk,
+            commands: y,
         }
     }
 }
@@ -66,18 +85,27 @@ impl super::View for Commands {
 
 impl Commands {
     fn gallery_grid_contents(&mut self, ui: &mut egui::Ui) {
-        let Self { excelpath, .. } = self;
-        ui.label("cisco");
-        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
-        ui.end_row();
-        ui.label("maipu");
-        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
-        ui.end_row();
-        ui.label("h3c");
-        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
-        ui.end_row();
-        ui.label("huawei");
-        ui.add(egui::TextEdit::multiline(excelpath).desired_rows(1).hint_text("commands"));
-        ui.end_row();
+        let Self { factory, commands } = self;
+
+        let mut z = zip(factory, commands);
+
+        for (name, j) in &mut z {
+            ui.label(name.clone());
+            ui.add(egui::TextEdit::multiline(j).desired_rows(1).hint_text("commands"));
+            ui.end_row();
+        }
+
+        if ui.button("Save").clicked() {
+            let conn = Connection::open("blj.db").unwrap();
+            let mut stmt = conn
+                .prepare("INSERT OR REPLACE INTO commands (factory, command) VALUES (?1, ?2)")
+                .unwrap();
+            let factory = self.factory.clone();
+            let commands = self.commands.clone();
+
+            for (factory, commands) in zip(factory, commands) {
+                stmt.execute((factory, commands)).unwrap();
+            }
+        }
     }
 }

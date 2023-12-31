@@ -27,6 +27,14 @@ fn main() -> Result<(), eframe::Error> {
             )",
             ()
         ).unwrap();
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS commands (
+                factory TEXT PRIMARY KEY,
+                command TEXT
+            )",
+            ()
+        ).unwrap();
     }
 
     let native_options = eframe::NativeOptions::default();

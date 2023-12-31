@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use calamine::{ Reader, Xlsx, open_workbook };
 use once_cell::sync::OnceCell;
 
@@ -19,12 +21,27 @@ impl Switch {
         INSTANCE.get().expect("Switch is not initialized")
     }
 
-    pub fn get_factory() -> Vec<String> {
+    pub fn get_factory() -> (Vec<String>, Vec<String>) {
         let x = Switch::global();
-        
 
+        let i = x.0
+            .clone()
+            .into_iter()
+            .map(|x| x.factory)
+            .collect::<Vec<String>>();
+        let w = x.1
+            .clone()
+            .into_iter()
+            .map(|x| x.factory)
+            .collect::<Vec<String>>();
 
-        vec!["".into()]
+        let i: HashSet<String> = HashSet::from_iter(i);
+        let i = Vec::from_iter(i);
+
+        let w: HashSet<String> = HashSet::from_iter(w);
+        let w = Vec::from_iter(w);
+
+        (i, w)
     }
 
     pub fn new() -> (Vec<Switch>, Vec<Switch>) {
