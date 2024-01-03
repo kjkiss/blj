@@ -10,7 +10,6 @@ mod backup;
 mod font;
 mod model;
 mod row;
-mod setting;
 mod windows;
 mod write;
 

@@ -1,9 +1,10 @@
 use eframe::egui::{ self };
 use rusqlite::{ params, Connection };
 
+#[derive(Debug, Clone)]
 pub struct Setting {
-    username: String,
-    password: String,
+    pub username: String,
+    pub password: String,
     crtpath: String,
     excelpath: String,
     open_crt_dialog: Option<String>,

@@ -1,17 +1,21 @@
-use crossbeam::channel::{unbounded, Sender};
-use ssh2::Session;
+use std::collections::HashMap;
 use std::error::Error;
 use std::io::prelude::*;
+use std::iter::zip;
 use std::net::TcpStream;
-use std::net::{IpAddr, SocketAddr};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::net::{ IpAddr, SocketAddr };
+use std::sync::atomic::{ AtomicBool, AtomicUsize, Ordering };
 use std::thread;
 use std::time::Duration;
 
+use crossbeam::channel::{ unbounded, Sender };
+use ssh2::Session;
+
 use crate::model::blj::Kind;
 use crate::model::switch::Switch;
-use crate::setting::Setting;
 use crate::write;
+use crate::windows::command::Commands;
+use crate::windows::setting::Setting;
 
 pub static NUM_DONE: AtomicUsize = AtomicUsize::new(0);
 pub static STOP: AtomicBool = AtomicBool::new(false);
@@ -27,7 +31,7 @@ fn ssh_work(
     password: &str,
     command: &[String],
     factory: String,
-    group: Kind,
+    group: Kind
 ) -> Result<(), Box<dyn Error>> {
     let socket = SocketAddr::new(IpAddr::V4(ip.parse().unwrap()), port.parse().unwrap());
     let tcp = TcpStream::connect_timeout(&socket, Duration::from_secs(2))?;
@@ -79,15 +83,28 @@ fn ssh_work(
 
 pub fn handle(
     switchs: Vec<Switch>,
-    setting: Setting,
     tx: Sender<f64>,
     tx_failed: Sender<(Kind, String)>,
-    group: Kind,
+    group: Kind
 ) -> Result<(), Box<dyn Error>> {
     let (todo_tx, todo_rx) = unbounded();
     let n_threads = 16;
     let len = switchs.len() as f64;
     assert!(len != 0.0, "len is 0");
+
+    let commands = Commands::default();
+
+    let mut hm = HashMap::new();
+    for (k, v) in zip(commands.factory, commands.commands) {
+        let v = v
+            .split("\n")
+            .map(|x| x.to_owned())
+            .collect::<Vec<_>>();
+        hm.insert(k, v);
+    }
+
+    let setting = Setting::default();
+
     for switch in switchs {
         todo_tx.send(Work::Task(switch))?;
     }
@@ -102,50 +119,56 @@ pub fn handle(
         let failed = tx_failed.clone();
         let username = setting.username.clone();
         let password = setting.password.clone();
-        let factory = setting.factory.clone();
-        thread::spawn(move || loop {
-            if STOP.load(Ordering::Relaxed) {
-                break;
-            }
+        let hm = hm.clone();
 
-            let task = todo.recv();
-
-            match task {
-                Err(_) => {
+        thread::spawn(move || {
+            loop {
+                if STOP.load(Ordering::Relaxed) {
                     break;
                 }
-                Ok(Work::Finished) => {
-                    break;
-                }
-                Ok(Work::Task(sw)) => {
-                    let command = match sw.factory.as_str() {
-                        "cisco" => factory.cisco.clone(),
-                        "ruijie" => factory.ruijie.clone(),
-                        "maipu" => factory.maipu.clone(),
-                        "h3c" => factory.h3c.clone(),
-                        "huawei" => factory.huawei.clone(),
-                        _ => panic!(),
-                    };
-                    if let Err(e) = ssh_work(
-                        sw.clone().ip,
-                        sw.port,
-                        &username,
-                        &password,
-                        &command,
-                        sw.factory,
-                        group,
-                    ) {
-                        let fail = format!("备份失败: [{:>15}]: {}", sw.ip, e);
-                        failed.send((group, fail)).unwrap();
-                    }
 
-                    let m = NUM_DONE.fetch_add(1, Ordering::Relaxed);
-                    let m = (m + 1) as f64;
-                    let mut c = (m % len) / len;
-                    if c == 0.0 {
-                        c = 1.0;
+                let task = todo.recv();
+
+                match task {
+                    Err(_) => {
+                        break;
                     }
-                    result.send(c).unwrap();
+                    Ok(Work::Finished) => {
+                        break;
+                    }
+                    Ok(Work::Task(sw)) => {
+                        let command = match sw.factory.as_str() {
+                            "cisco" => hm.get("cisco").unwrap(),
+                            "ruijie" => hm.get("ruijie").unwrap(),
+                            "maipu" => hm.get("maipu").unwrap(),
+                            "h3c" => hm.get("h3c").unwrap(),
+                            "huawei" => hm.get("huawei").unwrap(),
+                            _ => panic!(),
+                        };
+
+                        if
+                            let Err(e) = ssh_work(
+                                sw.clone().ip,
+                                sw.port,
+                                &username,
+                                &password,
+                                command,
+                                sw.factory,
+                                group
+                            )
+                        {
+                            let fail = format!("备份失败: [{:>15}]: {}", sw.ip, e);
+                            failed.send((group, fail)).unwrap();
+                        }
+
+                        let m = NUM_DONE.fetch_add(1, Ordering::Relaxed);
+                        let m = (m + 1) as f64;
+                        let mut c = (m % len) / len;
+                        if c == 0.0 {
+                            c = 1.0;
+                        }
+                        result.send(c).unwrap();
+                    }
                 }
             }
         });

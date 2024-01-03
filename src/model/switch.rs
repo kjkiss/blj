@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use calamine::{ Reader, Xlsx, open_workbook };
 use once_cell::sync::OnceCell;
+use rusqlite::Connection;
 
 #[derive(Debug, Clone)]
 pub struct Switch {
@@ -45,7 +46,16 @@ impl Switch {
     }
 
     pub fn new() -> (Vec<Switch>, Vec<Switch>) {
-        let mut wb: Xlsx<_> = open_workbook("./switch.xlsx").expect("open xlsx err");
+        let conn = Connection::open("blj.db").unwrap();
+        let mut stmt = conn.prepare("SELECT excelpath FROM store").unwrap();
+
+        let mut store = stmt.query([]).unwrap();
+        let mut excel_path = String::new();
+        if let Some(row) = store.next().unwrap() {
+            excel_path = row.get(0).unwrap();
+        }
+
+        let mut wb: Xlsx<_> = open_workbook(excel_path).expect("open xlsx err");
         let mut intranet = vec![];
         let mut internet = vec![];
 

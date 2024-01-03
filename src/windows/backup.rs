@@ -1,21 +1,16 @@
-use chrono::{DateTime, Local};
-use crossbeam::channel::{Receiver, Sender};
-use eframe::egui::{self, Context, ProgressBar, Ui, Window};
+use chrono::{ DateTime, Local };
+use crossbeam::channel::{ Receiver, Sender };
+use eframe::egui::{ self, Context, ProgressBar, Ui, Window };
 use eframe::epaint::Color32;
 use std::fs;
-use std::sync::atomic::Ordering::{self, Release};
+use std::sync::atomic::Ordering::{ self, Release };
 
-use crate::backup::{NUM_DONE, STOP};
-use crate::{
-    backup::handle,
-    model::{blj::Kind, switch::Switch},
-    setting::Setting,
-};
+use crate::backup::{ NUM_DONE, STOP };
+use crate::{ backup::handle, model::{ blj::Kind, switch::Switch } };
 
 pub struct Backup {
     kind: Kind,
     data: (Vec<Switch>, Vec<Switch>),
-    setting: Setting,
     tx: Sender<f64>,
     rx: Receiver<f64>,
     count: f32,
@@ -43,7 +38,6 @@ impl Default for Backup {
         Self {
             kind: Kind::Intranet,
             data: Switch::global().clone(),
-            setting: Setting::new(),
             tx,
             rx,
             count: 0.0,
@@ -118,14 +112,7 @@ impl Backup {
                 STOP.store(false, Release);
                 NUM_DONE.store(0, Release);
 
-                handle(
-                    data.clone(),
-                    self.setting.clone(),
-                    self.tx.clone(),
-                    self.tx_failed.clone(),
-                    self.kind,
-                )
-                .unwrap();
+                handle(data.clone(), self.tx.clone(), self.tx_failed.clone(), self.kind).unwrap();
             }
 
             if ui.button("停止").clicked() {

@@ -5,8 +5,8 @@ use std::{ iter::zip, collections::HashSet };
 
 #[derive(Debug)]
 pub struct Commands {
-    factory: Vec<String>,
-    commands: Vec<String>,
+    pub factory: Vec<String>,
+    pub commands: Vec<String>,
 }
 
 impl Default for Commands {
@@ -79,6 +79,8 @@ impl super::View for Commands {
             .show(ui, |ui| {
                 self.gallery_grid_contents(ui);
             });
+        ui.add_space(10.0);
+        self.add_button(ui);
     }
 }
 
@@ -87,13 +89,14 @@ impl Commands {
         let Self { factory, commands } = self;
 
         let mut z = zip(factory, commands);
-
         for (name, j) in &mut z {
             ui.label(name.clone());
             ui.add(egui::TextEdit::multiline(j).desired_rows(1).hint_text("commands"));
             ui.end_row();
         }
+    }
 
+    fn add_button(&mut self, ui: &mut egui::Ui) {
         if ui.button("Save").clicked() {
             let conn = Connection::open("blj.db").unwrap();
             let mut stmt = conn

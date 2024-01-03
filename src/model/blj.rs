@@ -2,8 +2,7 @@ use std::collections::BTreeSet;
 use eframe::egui::{ Context, Ui };
 use rusqlite::Connection;
 
-use crate::model::switch::{INSTANCE, Switch};
-use crate::setting::Setting;
+use crate::model::switch::{ INSTANCE, Switch };
 use crate::windows::backup::Backup;
 use crate::windows::{ setting, Window, command };
 use crate::Store;
@@ -12,7 +11,6 @@ pub struct Blj {
     pub kind: Kind,
     pub area: Area,
     pub data: (Vec<Switch>, Vec<Switch>),
-    pub setting: Setting,
     pub store: Store,
     pub backup_is_open: bool,
     pub backup: Backup,
@@ -72,14 +70,10 @@ impl Default for Blj {
             kind: Kind::Intranet,
             area: Area::Ytbz,
             data: Switch::global().clone(),
-            setting: Setting::new(),
             store: mystore,
             backup_is_open: false,
             backup: Backup::default(),
-            windows: vec![
-                Box::<setting::Setting>::default(),
-                Box::<command::Commands>::default(),
-                ],
+            windows: vec![Box::<setting::Setting>::default(), Box::<command::Commands>::default()],
             open,
         }
     }

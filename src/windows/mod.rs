@@ -3,6 +3,7 @@ use eframe::egui;
 pub mod backup;
 pub mod setting;
 pub mod command;
+pub mod table;
 
 pub trait View {
     fn ui(&mut self, ui: &mut egui::Ui);
