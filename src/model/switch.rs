@@ -59,7 +59,7 @@ impl Switch {
         let mut intranet = vec![];
         let mut internet = vec![];
 
-        let sheets = wb.sheet_names().to_owned();
+        let sheets = wb.sheet_names();
 
         if let Some(Ok(r)) = wb.worksheet_range(sheets[0].as_str()) {
             for row in r.rows().skip(1) {

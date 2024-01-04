@@ -3,8 +3,8 @@ use eframe::egui::{ Context, Ui };
 use rusqlite::Connection;
 
 use crate::model::switch::{ INSTANCE, Switch };
-use crate::windows::backup::Backup;
-use crate::windows::{ setting, Window, command };
+use crate::windows::Window;
+use crate::windows::{ backup::Backup, setting::Setting, command::Commands, table::Table };
 use crate::Store;
 
 pub struct Blj {
@@ -18,8 +18,9 @@ pub struct Blj {
     open: BTreeSet<String>,
 }
 
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy, Default)]
 pub enum Kind {
+    #[default]
     Intranet,
     Internet,
 }
@@ -73,7 +74,11 @@ impl Default for Blj {
             store: mystore,
             backup_is_open: false,
             backup: Backup::default(),
-            windows: vec![Box::<setting::Setting>::default(), Box::<command::Commands>::default()],
+            windows: vec![
+                Box::<Setting>::default(),
+                Box::<Commands>::default(),
+                Box::<Table>::default()
+            ],
             open,
         }
     }
